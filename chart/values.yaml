@@ -1,0 +1,78 @@
+# Hourly by default.
+schedule: "0 * * * *"
+
+# One-shot Job after install and upgrade so new/changed subfolders sync immediately.
+initialJob:
+  enabled: true
+
+# Paths under https://data.chc.ucsb.edu/ to mirror, in order.
+# Each entry needs `path`; optional `accept` is passed to wget -A (comma-separated
+# extensions/patterns, e.g. "tif,nc" or "*.tif,*.nc").
+# wget -nH -P <mirror> creates <mirror>/<path>/ from the URL path.
+# Example:
+#   subfolders:
+#     - path: products/CHIRPS-2.0
+#       accept: "tif,nc"
+#     - path: products/CHIRPS-2.0/docs
+subfolders: []
+
+wget:
+  baseUrl: https://data.chc.ucsb.edu
+  # Flags before the URL; -P / dest is set from gcs mount + mirrorPrefix.
+  extraArgs:
+    - "-r"
+    - "-l"
+    - "inf"
+    - "--no-parent"
+    - "-N"
+    - "--reject"
+    - "index.html*"
+    - "-e"
+    - "robots=off"
+    - "-nH"
+
+image:
+  repository: alpine
+  tag: "3.21"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+gcs:
+  bucket: sheerwater-public-datalake
+  mountPath: /mnt/sheerwater-public-datalake
+  # Objects land at gs://<bucket>/<mirrorPrefix>/<subfolder>/ (wget creates the subfolder).
+  mirrorPrefix: chc-mirror
+  driver: gcsfuse.csi.storage.gke.io
+  mountOptions: "implicit-dirs"
+  volumeAttributes: {}
+  sidecar:
+    cpuLimit: ""
+    memoryLimit: ""
+    ephemeralStorageLimit: ""
+
+serviceAccount:
+  create: true
+  name: chc-mirror
+  # Set Workload Identity binding, e.g.:
+  #   iam.gke.io/gcp-service-account: chc-mirror@PROJECT.iam.gserviceaccount.com
+  annotations: {}
+
+concurrencyPolicy: Forbid
+successfulJobsHistoryLimit: 1
+failedJobsHistoryLimit: 3
+startingDeadlineSeconds: 300
+backoffLimit: 1
+activeDeadlineSeconds: 3300
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podLabels: {}
+
+nameOverride: ""
+fullnameOverride: ""

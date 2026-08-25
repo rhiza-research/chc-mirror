@@ -1,0 +1,20 @@
+{{- if not .Values.subfolders }}
+{{- fail "subfolders is required: set at least one CHC subfolder to mirror" }}
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "chc-mirror.fullname" . }}
+  labels:
+    {{- include "chc-mirror.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  {{- if .Values.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ .Values.startingDeadlineSeconds }}
+  {{- end }}
+  jobTemplate:
+    spec:
+      {{- include "chc-mirror.jobSpec" . | nindent 6 }}

@@ -1,0 +1,12 @@
+apiVersion: v2
+name: chc-mirror
+description: CronJob that wget-mirrors CHC data-hub subfolders into gs://sheerwater-public-datalake/chc-mirror
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - chc
+  - wget
+  - mirror
+maintainers:
+  - name: rhiza-research
