@@ -31,9 +31,12 @@ wget:
     - "--reject"
     - "index.html*"
   # Fetch URL list from spider; -i / -P are set in the job script.
+  # -x forces URL path directories (needed for -i; without it files land flat in -P).
+  # -nH drops the hostname directory so paths stay under <mirror>/<url-path>/.
   downloadArgs:
     - "-N"
     - "-nH"
+    - "-x"
     - "-e"
     - "robots=off"
 
