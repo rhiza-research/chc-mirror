@@ -1,5 +1,5 @@
-# Every 2 hours by default.
-schedule: "0 */2 * * *"
+# Every 6 hours by default.
+schedule: "0 */6 * * *"
 
 # One-shot Job after install and upgrade so new/changed subfolders sync immediately.
 initialJob:
@@ -72,8 +72,8 @@ successfulJobsHistoryLimit: 1
 failedJobsHistoryLimit: 3
 startingDeadlineSeconds: 300
 backoffLimit: 1
-# 1h50m — leave headroom before the next 2-hour Cron tick.
-activeDeadlineSeconds: 6600
+# 6h — matches the Cron interval so a long run can finish before the next tick.
+activeDeadlineSeconds: 21600
 
 resources: {}
 
