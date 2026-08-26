@@ -1,9 +1,11 @@
 # Every 6 hours by default.
 schedule: "0 */6 * * *"
 
-# One-shot Job after install and upgrade so new/changed subfolders sync immediately.
+# One-shot Job on install/upgrade (revision-named, not a Helm hook).
 initialJob:
   enabled: true
+  # Delete finished Job objects after this many seconds (pods/logs remain until then).
+  ttlSecondsAfterFinished: 86400
 
 # Paths under https://data.chc.ucsb.edu/ to mirror, in order.
 # Each entry needs `path`; optional `accept` is passed to wget -A on the spider

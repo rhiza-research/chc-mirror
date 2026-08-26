@@ -1,5 +1,5 @@
 {{/*
-Shared JobSpec used by the CronJob and the optional post-install Job.
+Shared JobSpec used by the CronJob and the optional revision-named run Job.
 */}}
 {{- define "chc-mirror.jobSpec" -}}
 backoffLimit: {{ .Values.backoffLimit }}

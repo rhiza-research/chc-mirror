@@ -2,17 +2,20 @@
 {{- if not .Values.subfolders }}
 {{- fail "subfolders is required: set at least one CHC subfolder to mirror" }}
 {{- end }}
-# One-shot run after install and upgrade (e.g. when subfolders change).
+# One-shot run on install/upgrade (revision-named; not a Helm hook).
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "chc-mirror.fullname" . }}-initial
+  name: {{ include "chc-mirror.fullname" . }}-run-{{ .Release.Revision }}
   labels:
     {{- include "chc-mirror.labels" . | nindent 4 }}
+    app.kubernetes.io/component: run
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    # Keep prior revision Jobs when manifest moves on (avoid pruning a still-running sync).
+    argocd.argoproj.io/sync-options: Prune=false
 spec:
+  {{- if .Values.initialJob.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ .Values.initialJob.ttlSecondsAfterFinished }}
+  {{- end }}
   {{- include "chc-mirror.jobSpec" . | nindent 2 }}
 {{- end }}
