@@ -1,14 +1,14 @@
-# Hourly by default.
-schedule: "0 * * * *"
+# Every 2 hours by default.
+schedule: "0 */2 * * *"
 
 # One-shot Job after install and upgrade so new/changed subfolders sync immediately.
 initialJob:
   enabled: true
 
 # Paths under https://data.chc.ucsb.edu/ to mirror, in order.
-# Each entry needs `path`; optional `accept` is passed to wget -A (comma-separated
-# extensions/patterns, e.g. "tif,nc" or "*.tif,*.nc").
-# wget -nH -P <mirror> creates <mirror>/<path>/ from the URL path.
+# Each entry needs `path`; optional `accept` is passed to wget -A on the spider
+# pass (comma-separated extensions/patterns, e.g. "tif,nc" or "*.tif,*.nc").
+# Download uses -nH -P <mirror> so objects land at <mirror>/<url-path>/.
 # Example:
 #   subfolders:
 #     - path: products/CHIRPS-2.0
@@ -18,18 +18,24 @@ subfolders: []
 
 wget:
   baseUrl: https://data.chc.ucsb.edu
-  # Flags before the URL; -P / dest is set from gcs mount + mirrorPrefix.
-  extraArgs:
+  # Recursive spider (no download); -A comes from each subfolder.accept.
+  spiderArgs:
+    - "--spider"
     - "-r"
     - "-l"
     - "inf"
     - "--no-parent"
-    - "-N"
-    - "--reject"
-    - "index.html*"
+    - "-nH"
     - "-e"
     - "robots=off"
+    - "--reject"
+    - "index.html*"
+  # Fetch URL list from spider; -i / -P are set in the job script.
+  downloadArgs:
+    - "-N"
     - "-nH"
+    - "-e"
+    - "robots=off"
 
 image:
   repository: alpine
@@ -63,7 +69,8 @@ successfulJobsHistoryLimit: 1
 failedJobsHistoryLimit: 3
 startingDeadlineSeconds: 300
 backoffLimit: 1
-activeDeadlineSeconds: 3300
+# 1h50m — leave headroom before the next 2-hour Cron tick.
+activeDeadlineSeconds: 6600
 
 resources: {}
 

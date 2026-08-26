@@ -60,15 +60,36 @@ template:
 {{- fail (printf "subfolders[%d].path is required" $i) }}
 {{- end }}
             echo "Mirroring ${BASE_URL}/{{ $entry.path }} -> ${DEST_ROOT}/{{ if $entry.accept }} (accept: {{ $entry.accept }}){{ end }}"
+            list="$(mktemp)"
+            # Spider the tree, then keep only real file URLs (drop dirs / index.html*).
             wget \
-{{- range $.Values.wget.extraArgs }}
+{{- range $.Values.wget.spiderArgs }}
               {{ . | quote }} \
 {{- end }}
 {{- if $entry.accept }}
               "-A" {{ $entry.accept | quote }} \
 {{- end }}
               "${BASE_URL}/{{ $entry.path }}" \
-              -P "${DEST_ROOT}/"
+              2>&1 \
+              | awk '/^--/ { print $3 }' \
+              | grep -E '^https?://' \
+              | grep -viE 'index\.html' \
+              | grep -vE '/$' \
+              | grep -vE '/\?' \
+              | sort -u \
+              > "${list}" || true
+            echo "Found $(wc -l < "${list}") URLs to fetch for {{ $entry.path }}"
+            if [ -s "${list}" ]; then
+              wget \
+{{- range $.Values.wget.downloadArgs }}
+                {{ . | quote }} \
+{{- end }}
+                -i "${list}" \
+                -P "${DEST_ROOT}/"
+            else
+              echo "Nothing to download for {{ $entry.path }}"
+            fi
+            rm -f "${list}"
             echo "Finished {{ $entry.path }}"
 {{- end }}
             echo "All mirrors complete"
